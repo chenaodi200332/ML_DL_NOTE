@@ -16,7 +16,7 @@
 |---|---|---|
 | PyTorch 训练循环 | 清零、前向与损失、反向、更新 | 已记录 |
 | 梯度 `.grad` | 默认累加，通常每轮清零 | 已记录 |
-| `model.eval()` | 评估模式不等于关闭梯度 | 已记录 |
+| `model.eval()` 与 `inference_mode()` | 层行为切换与梯度关闭是两件事 | 🔁 不熟悉／需要复习（2次） |
 | `nn.Embedding` | 将离散 ID 映射为可训练稠密向量 | 🔁 不熟悉／需要复习（2次） |
 | 矩阵分解（MF） | 潜在因子维度、优化超参数与批量评分预测 | 已记录 |
 | `padding_idx` | 填充索引及其梯度行为 | 已记录 |
@@ -34,7 +34,7 @@
 | RMSE | 衡量预测值与真实值之间的均方根误差 | 初次记录 |
 | 负采样中的噪声词 | 从噪声分布采样、充当负样本的词 | 初次记录 |
 
-> **复习标记说明**：`BPR／铰链损失` 和 `nn.Embedding` 已出现第 2 次提问，已在原条目标记 `🔁 不熟悉／需要复习`；其他主题尚未确认重复。
+> **复习标记说明**：`BPR／铰链损失`、`nn.Embedding` 和 `model.eval()`／`inference_mode()` 已出现第 2 次提问，已在原条目标记 `🔁 不熟悉／需要复习`；其他主题尚未确认重复。
 
 ## 1. PyTorch 基础
 
@@ -55,11 +55,63 @@ for x, y in loader:
 
 PyTorch 默认**累加**梯度，反复调用 `backward()` 会将新梯度加到已有 `.grad`。通常每次更新前清零，避免意外混合多个 batch；有意使用梯度累积时则不必每个 batch 清零。
 
-### 1.3 `model.train()`、`model.eval()` 和 `torch.no_grad()`
+### 1.3 `model.train()`、`model.eval()`、`torch.no_grad()` 和 `torch.inference_mode()`
 
-- `train()` / `eval()` 控制部分模块的行为，如 Dropout、BatchNorm。
-- 纯 `nn.Embedding` 在相同权重、输入下，切换模式通常不会改变输出。
-- `eval()` **不会**自动禁用梯度；推理时通常搭配 `torch.no_grad()` 或 `torch.inference_mode()`。
+> **🔁 不熟悉／需要复习**：这是同一核心概念的第 2 次提问；关键是区分“改变层的运行方式”和“关闭自动求导”。
+
+`model.eval()` 的作用是把模型切换到评估模式。它会递归地把各模块的 `training` 状态设为 `False`，从而改变部分层的行为：
+
+- Dropout不再随机丢弃神经元；
+- BatchNorm使用训练期间保存的运行均值和方差，而不是当前batch的统计量；
+- 普通Linear、Embedding等层通常不会因为 `eval()` 而改变计算公式。
+
+但是，`model.eval()` **不会关闭梯度计算**，也不会把参数的 `requires_grad` 改成 `False`。如果直接在 `eval()` 后执行前向传播，PyTorch仍可能建立计算图。
+
+`torch.inference_mode()` 的作用是关闭自动求导，并进一步减少视图跟踪和版本计数等推理开销。它通常比 `torch.no_grad()` 更适合纯推理，但限制也更严格。
+
+`torch.inference_mode()` **不会自动调用 `model.eval()`**。如果模型仍处于训练模式，Dropout和BatchNorm仍可能按照训练模式运行。
+
+| 对比项 | `model.eval()` | `torch.inference_mode()` |
+|---|---|---|
+| 控制对象 | 模型中部分层的运行行为 | PyTorch自动求导和推理开销 |
+| 是否关闭梯度 | 否 | 是 |
+| 是否关闭Dropout随机性 | 是 | 否 |
+| 是否让BatchNorm使用运行统计量 | 是 | 否 |
+| 典型形式 | 模型方法 | 上下文管理器或装饰器 |
+| 退出后是否恢复 | 需要手动调用 `model.train()` | 离开上下文后自动恢复梯度模式 |
+
+验证或预测时通常需要同时使用：
+
+```python
+model.eval()
+
+with torch.inference_mode():
+    predictions = model(inputs)
+```
+
+如果验证之后还要继续训练，应重新切回训练模式：
+
+```python
+model.train()
+```
+
+常见错误：
+
+```python
+# 只有eval：层行为正确，但仍可能建立计算图
+model.eval()
+predictions = model(inputs)
+
+# 只有inference_mode：没有梯度，但模型可能仍处于训练模式
+with torch.inference_mode():
+    predictions = model(inputs)
+```
+
+`torch.no_grad()` 也会关闭梯度，但比 `inference_mode()` 更灵活。如果生成的张量随后需要参与启用梯度的计算，或某段代码与 `inference_mode()` 不兼容，可以使用 `no_grad()`。纯推理场景通常优先尝试 `inference_mode()`。
+
+- 提问次数：2
+- 最近提问日期：2026-10-19
+- 状态：🔁 不熟悉／需要复习
 
 ### 1.4 `nn.Module`、Dataset 与 DataLoader
 
@@ -555,3 +607,4 @@ MSE 是“平方误差的平均”，单位是目标单位的平方；RMSE 是 M
 | 2026-10-18 | 新增“离线实验与在线实验”，比较数据、指标、作用、因果边界和实施成本 | 首次提问 |
 | 2026-10-19 | 新增“RMSE”，说明计算步骤、作用、示例以及与Top-K指标的边界 | 首次提问 |
 | 2026-10-19 | 在原“Embedding”条目补充查表过程、推荐系统作用、代码和使用边界 | 🔁 第2次提问 |
+| 2026-10-19 | 在原“model.eval()”条目补充 inference_mode、no_grad、组合用法和常见错误 | 🔁 第2次提问 |
