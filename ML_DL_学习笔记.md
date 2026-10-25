@@ -1,6 +1,6 @@
 # 机器学习、深度学习与代码学习笔记
 
-> 更新规则：本对话中出现的新概念加入对应章节；重复问题在原条目补充，不重复建条目，并标注 **🔁 不熟悉／需要复习**。示例代码优先采用可运行的 PyTorch 代码。记录日期：2026-10-25。
+> 更新规则：本对话中出现的新概念加入对应章节；重复问题在原条目补充，不重复建条目，并标注 **🔁 不熟悉／需要复习**。示例代码优先采用可运行的 PyTorch 代码。记录日期：2026-10-26。
 
 ### 维护口径
 
@@ -16,9 +16,11 @@
 |---|---|---|
 | PyTorch 训练循环 | 清零、前向与损失、反向、更新 | 已记录 |
 | RecBole 与 PyTorch | 推荐实验框架与底层深度学习框架的分工 | 初次记录 |
+| PyTorch、Transformer 与 transforms | 深度学习框架、模型架构和数据变换工具不是同一层级 | 初次记录 |
 | 梯度 `.grad` | 默认累加，通常每轮清零 | 已记录 |
 | `model.eval()` 与 `inference_mode()` | 层行为切换与梯度关闭是两件事 | 🔁 不熟悉／需要复习（2次） |
 | `nn.Embedding` | 将离散 ID 映射为可训练稠密向量 | 🔁 不熟悉／需要复习（2次） |
+| BERT 与 SBERT | 通用上下文编码器与句子向量模型的关系和区别 | 初次记录 |
 | 冷启动与内容特征 | 新用户／新商品缺少交互时的可泛化表示 | 初次记录 |
 | 协同过滤（CF） | 利用多位用户的历史交互发现共同偏好 | 初次记录 |
 | BPR-MF | MF打分模型与BPR成对排序损失的组合 | 初次记录 |
@@ -254,6 +256,70 @@ run_recbole(
 
 - 提问次数：1
 - 最近提问日期：2026-10-19
+- 状态：首次记录，暂不标记为不熟悉
+
+
+### 1.8 PyTorch（torch）、Transformer 与 transforms 的区别
+
+这几个词不在同一层级，不能当作互相替代的工具。
+
+#### PyTorch 和 torch
+
+PyTorch 是一个通用深度学习框架，提供 Tensor、自动求导、神经网络层、优化器和 CPU／GPU 计算等能力。Python 代码中的 \`torch\` 是 PyTorch 的主要包名，例如：
+
+\`\`\`python
+import torch
+x = torch.tensor([1.0, 2.0])
+\`\`\`
+
+因此日常说“torch”时，通常是在指 PyTorch 包或它提供的具体 API。
+
+#### Transformer
+
+Transformer 是一种神经网络架构，核心组件包括自注意力、前馈网络、残差连接和归一化。BERT 使用的是 Transformer 的编码器结构。
+
+PyTorch 是“搭建和训练模型的工具箱”，Transformer 是“模型怎样连接和计算的设计图”。可以使用 PyTorch 实现 Transformer：
+
+\`\`\`python
+import torch.nn as nn
+
+layer = nn.TransformerEncoderLayer(d_model=128, nhead=4)
+model = nn.TransformerEncoder(layer, num_layers=2)
+\`\`\`
+
+所以两者的关系类似：
+
+> PyTorch 是积木和施工工具；Transformer 是用这些积木搭建模型的一种图纸。
+
+另外，Hugging Face 的 \`transformers\` 是一个模型库，提供 BERT、GPT 等预训练模型；它也不等同于 Transformer 架构本身。
+
+#### 如果问题里的 transform 指 torchvision.transforms
+
+\`torchvision.transforms\` 是 PyTorch 计算机视觉生态中的数据预处理／增强工具，例如缩放、裁剪、翻转和归一化图片：
+
+\`\`\`python
+from torchvision.transforms import v2
+
+transform = v2.Compose([
+    v2.Resize((224, 224)),
+    v2.ToImage(),
+    v2.ToDtype(torch.float32, scale=True),
+])
+\`\`\`
+
+此处的 transform 只是“数据变换操作”，与 Transformer 神经网络不是一回事。
+
+| 名称 | 类型 | 主要作用 |
+|---|---|---|
+| PyTorch／\`torch\` | 深度学习框架／Python 包 | 张量计算、自动求导、搭建和训练模型 |
+| Transformer | 模型架构 | 用自注意力等结构处理序列信息 |
+| Hugging Face \`transformers\` | 预训练模型库 | 加载和训练 BERT、GPT 等模型 |
+| \`torchvision.transforms\` | 数据处理工具 | 对图片等数据做预处理和增强 |
+
+来源：[PyTorch Main Components](https://docs.pytorch.org/docs/stable/user_guide/pytorch_main_components.html)、[Attention Is All You Need](https://arxiv.org/abs/1706.03762)、[Torchvision 官方文档](https://docs.pytorch.org/vision/)
+
+- 提问次数：1
+- 最近提问日期：2026-10-26
 - 状态：首次记录，暂不标记为不熟悉
 
 ## 2. 向量与表示学习
@@ -1567,6 +1633,72 @@ ILS是 **Intra-List Similarity，列表内相似度**，计算同一推荐列表
 - 最近提问日期：2026-10-12
 - 状态：首次记录，暂不标记为不熟悉
 
+
+### 4.2 BERT 与 SBERT 的关系和区别
+
+一句话概括：
+
+> **BERT 擅长理解上下文；SBERT 在 BERT 类编码器的基础上，专门训练出适合比较、检索的句子向量。**
+
+#### BERT 是什么？
+
+BERT 全称是 Bidirectional Encoder Representations from Transformers，即“双向 Transformer 编码器表示”。它利用左右两侧上下文为每个 token 生成表示，经过预训练后可以微调用于文本分类、问答、命名实体识别等任务。
+
+BERT 的原始强项不是“直接生成适合余弦相似度比较的句子向量”。如果要精细判断两个句子的关系，常见做法是把两个句子一起输入 BERT，再输出匹配分数。这种交叉编码方式能够让两个句子的 token 互相注意，但大量检索时需要反复对每一对文本计算，成本很高。
+
+#### SBERT 是什么？
+
+SBERT 全称是 Sentence-BERT。原始 SBERT 工作使用孪生／三元组网络结构对 BERT 或 RoBERTa 类编码器进行训练，并通过 pooling 得到固定长度的句子 embedding，使语义相近的句子向量更接近。
+
+得到句子向量以后，可以：
+
+1. 预先计算并保存所有商品文本向量；
+2. 对查询或用户兴趣文本只编码一次；
+3. 使用余弦相似度或点积快速比较向量。
+
+这使 SBERT 更适合语义搜索、相似句检索、聚类和推荐系统中的商品文本表示。
+
+#### 关系与区别
+
+| 对比点 | BERT | SBERT |
+|---|---|---|
+| 关系 | 基础 Transformer 编码器模型 | 通常以 BERT／RoBERTa 等编码器为基础 |
+| 主要目标 | 学习上下文表示，适配多种 NLP 任务 | 学习可直接比较的句子／文本 embedding |
+| 常见输出 | 每个 token 的表示，以及任务所需输出 | 一个文本对应一个固定长度向量 |
+| 比较两段文本 | 可将文本对一起输入后打分 | 分别编码，再算余弦相似度或点积 |
+| 大规模检索 | 文本对逐一联合编码时成本较高 | 可提前保存向量，检索更高效 |
+| 常见用途 | 分类、问答、实体识别等 | 语义搜索、相似度、聚类、推荐文本特征 |
+
+需要注意：
+
+- SBERT 不是简单地把普通 BERT 的 \`[CLS]\` 向量取出来；关键在于针对句子表示和相似度目标进行训练，并使用合适的 pooling。
+- “SBERT 一定比 BERT 准确”不是普遍成立。若候选数量很少、允许对每个文本对联合编码，Cross-Encoder 往往能进行更细致的交互；SBERT 的主要优势是向量可预计算和大规模检索效率。
+- 现在的 Sentence Transformers 生态不只包含原始 BERT，也可以使用其他 Transformer 编码器，因此工程中“Sentence Transformer”比原始论文里的“Sentence-BERT”范围更广。
+
+#### 在当前推荐系统研究中的作用
+
+对于商品标题和描述：
+
+\`\`\`text
+商品文本
+   ↓
+SBERT
+   ↓
+商品语义向量
+\`\`\`
+
+LightGCN 学习用户—商品交互图中的协同表示，SBERT 学习商品文本中的语义表示。二者可以融合，但作用不同：
+
+- LightGCN：哪些用户与哪些商品发生过交互；
+- SBERT：商品文本在语义上表达了什么；
+- 融合模型：同时使用协同信号和内容信号。
+
+来源：[BERT 原始论文](https://arxiv.org/abs/1810.04805)、[Sentence-BERT 原始论文](https://arxiv.org/abs/1908.10084)、[Sentence Transformers 官方文档](https://sbert.net/docs/sentence_transformer/usage/semantic_textual_similarity.html)
+
+- 提问次数：1
+- 最近提问日期：2026-10-26
+- 状态：首次记录，暂不标记为不熟悉
+
 ## 5. 后续更新记录
 
 | 日期 | 变更 | 复习状态 |
@@ -1595,3 +1727,4 @@ ILS是 **Intra-List Similarity，列表内相似度**，计算同一推荐列表
 | 2026-10-22 | 补充MF并新增BPR-MF、NeuMF、LightGCN，比较打分结构、训练目标和图传播 | MF第2次，其余首次 |
 | 2026-10-25 | 新增GCN，并在原LightGCN条目补充邻居聚合、传播公式及与普通GCN的区别 | GCN首次，LightGCN第2次 |
 | 2026-10-25 | 新增“过拟合与过平滑”，区分泛化失败与图节点表示趋同，并补充诊断和缓解方法 | 首次提问 |
+| 2026-10-26 | 新增“BERT 与 SBERT”及“PyTorch、Transformer 与 transforms”，区分编码模型、句向量模型、框架、架构和数据变换工具 | 均为首次提问 |
