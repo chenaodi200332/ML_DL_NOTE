@@ -18,10 +18,12 @@
 | RecBole 与 PyTorch | 推荐实验框架与底层深度学习框架的分工 | 初次记录 |
 | PyTorch、Transformer 与 transforms | 深度学习框架、模型架构和数据变换工具不是同一层级 | 初次记录 |
 | 注意力机制（Attention） | 按相关性为信息分配动态权重并加权汇总 | 初次记录 |
-| 卷积神经网络（CNN） | 用共享卷积核提取局部和分层特征 | 初次记录 |
+| 卷积神经网络（CNN） | 用共享卷积核提取局部和分层特征 | 🔁 不熟悉／需要复习（2次） |
+| 循环神经网络（RNN） | 通过隐藏状态按顺序传递历史信息 | 初次记录 |
+| 多层感知机（MLP） | 多层全连接与非线性激活组成的前馈网络 | 初次记录 |
 | 梯度 `.grad` | 默认累加，通常每轮清零 | 已记录 |
 | `model.eval()` 与 `inference_mode()` | 层行为切换与梯度关闭是两件事 | 🔁 不熟悉／需要复习（2次） |
-| `nn.Embedding` | 将离散 ID 映射为可训练稠密向量 | 🔁 不熟悉／需要复习（2次） |
+| `nn.Embedding` | 将离散 ID 映射为可训练稠密向量 | 🔁 不熟悉／需要复习（3次） |
 | BERT 与 SBERT | 通用上下文编码器与句子向量模型的关系和区别 | 初次记录 |
 | 冷启动与内容特征 | 新用户／新商品缺少交互时的可泛化表示 | 初次记录 |
 | 协同过滤（CF） | 利用多位用户的历史交互发现共同偏好 | 初次记录 |
@@ -39,7 +41,7 @@
 | 保存与恢复模型 | `state_dict` / `load_state_dict` | 已记录 |
 | 自监督学习 | 从数据本身构造学习目标 | 已记录 |
 | One-Hot | 用单个 1 表示类别 | 已记录 |
-| Softmax | 将分数转为和为 1 的分布 | 已记录 |
+| Softmax | 将分数转为和为 1 的分布 | 🔁 不熟悉／需要复习（2次） |
 | BPR／铰链损失 | 成对排序、负样本语义、曝光偏差与采样策略 | 🔁 不熟悉／需要复习（4次） |
 | Sigmoid 与 ReLU | 输出范围、梯度和典型使用位置 | 初次记录 |
 | A/B 测试 | 随机分组，比较方案对真实用户指标的因果影响 | 初次记录 |
@@ -48,7 +50,7 @@
 | Top-K 推荐评价指标 | 准确性、排序质量、覆盖、流行度、采样与全排序评价 | 🔁 不熟悉／需要复习（3次） |
 | 负采样中的噪声词 | 从噪声分布采样、充当负样本的词 | 初次记录 |
 
-> **复习标记说明**：`BPR／铰链损失` 已出现第 4 次提问，`Top-K 推荐评价指标` 已出现第 3 次提问；`nn.Embedding`、`model.eval()`／`inference_mode()`、`RMSE`、`矩阵分解（MF）` 和 `LightGCN` 已出现第 2 次提问，均已在原条目标记 `🔁 不熟悉／需要复习`；其他主题尚未确认重复。
+> **复习标记说明**：`BPR／铰链损失` 已出现第 4 次提问；`Top-K 推荐评价指标` 和 `nn.Embedding` 已出现第 3 次提问；`model.eval()`／`inference_mode()`、`RMSE`、`矩阵分解（MF）`、`LightGCN`、`卷积神经网络（CNN）` 和 `Softmax` 已出现第 2 次提问，均已在原条目标记 `🔁 不熟悉／需要复习`；其他主题尚未确认重复。
 
 ## 1. PyTorch 基础
 
@@ -328,6 +330,8 @@ transform = v2.Compose([
 
 ### 1.9 卷积神经网络（Convolutional Neural Network，CNN）
 
+> **🔁 不熟悉／需要复习**：这是同一核心概念的第 2 次提问；本次重点补充它在五个术语中的角色：CNN是一种神经网络结构，不是激活函数或表示层。
+
 卷积神经网络的英文是 **Convolutional Neural Network**，通常缩写为 **CNN**。
 
 一句话理解：
@@ -489,9 +493,9 @@ CNN并非所有任务的最佳选择。对于长距离关系、超大规模预�
 
 来源：[PyTorch \`Conv2d\` 官方文档](https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv2d.html)、[LeCun 等人的 LeNet-5 论文](https://bottou.org/papers/lecun-98h)、[《动手学深度学习》卷积神经网络章节](https://zh.d2l.ai/chapter_convolutional-neural-networks/index.html)
 
-- 提问次数：1
+- 提问次数：2
 - 最近提问日期：2026-10-27
-- 状态：首次记录，暂不标记为不熟悉
+- 状态：🔁 不熟悉／需要复习
 
 
 ### 1.10 注意力机制（Attention Mechanism）
@@ -671,13 +675,162 @@ print(output.shape)   # torch.Size([3, 4])
 - 最近提问日期：2026-10-27
 - 状态：首次记录，暂不标记为不熟悉
 
+
+### 1.11 循环神经网络（Recurrent Neural Network，RNN）
+
+RNN全称是 **Recurrent Neural Network**，中文是循环神经网络。
+
+一句话理解：
+
+> **RNN按顺序读取序列，并把前面读到的信息保存在隐藏状态中，传给下一步。**
+
+例如处理句子：
+
+\`\`\`text
+我 → 喜欢 → 这个 → 游戏
+\`\`\`
+
+RNN读取“喜欢”时，不仅使用当前词“喜欢”，还会使用读取“我”以后留下的隐藏状态。其基本形式可以写为：
+
+\`\`\`text
+当前隐藏状态 = 激活函数（当前输入 + 上一步隐藏状态）
+\`\`\`
+
+数学上常写为：
+
+\`\`\`text
+hₜ = tanh(Wₓxₜ + Wₕhₜ₋₁ + b)
+\`\`\`
+
+其中：
+
+- \`xₜ\`：当前时刻的输入；
+- \`hₜ₋₁\`：上一步保留下来的信息；
+- \`hₜ\`：更新后的隐藏状态。
+
+RNN常用于文本、语音、时间序列和用户行为序列。但普通RNN在长序列中可能出现梯度消失或梯度爆炸，难以长期记忆；LSTM和GRU是常见改进。RNN还需要按时间顺序递推，训练并行性通常弱于Transformer。
+
+最小PyTorch例子：
+
+\`\`\`python
+import torch
+from torch import nn
+
+rnn = nn.RNN(
+    input_size=8,
+    hidden_size=16,
+    batch_first=True
+)
+
+x = torch.randn(4, 10, 8)
+output, h_n = rnn(x)
+
+print(output.shape)  # [4, 10, 16]
+print(h_n.shape)     # [1, 4, 16]
+\`\`\`
+
+这里表示4个样本、每个序列10步、每步8维输入，RNN输出16维隐藏表示。
+
+来源：[PyTorch \`nn.RNN\` 官方文档](https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html)
+
+- 提问次数：1
+- 最近提问日期：2026-10-27
+- 状态：首次记录，暂不标记为不熟悉
+
+### 1.12 多层感知机（Multilayer Perceptron，MLP）
+
+MLP全称是 **Multilayer Perceptron**，中文通常叫多层感知机。也常写作 **Multi-Layer Perceptron**。
+
+一句话理解：
+
+> **MLP把多个全连接层和非线性激活函数叠在一起，学习输入特征与输出之间的复杂关系。**
+
+基本结构：
+
+\`\`\`text
+输入
+ ↓
+全连接层（Linear）
+ ↓
+激活函数（如ReLU）
+ ↓
+全连接层
+ ↓
+输出
+\`\`\`
+
+如果只有多个Linear层却没有非线性激活，从数学上仍可合并成一个Linear层，因此ReLU等非线性函数是MLP表达复杂关系的关键。
+
+最小PyTorch例子：
+
+\`\`\`python
+from torch import nn
+
+mlp = nn.Sequential(
+    nn.Linear(20, 64),
+    nn.ReLU(),
+    nn.Linear(64, 32),
+    nn.ReLU(),
+    nn.Linear(32, 3)
+)
+\`\`\`
+
+它可以把20维输入变成3个输出分数。
+
+MLP常用于：
+
+- 表格数据；
+- 分类或回归的输出头；
+- 融合多个特征；
+- 处理用户和商品embedding的组合。
+
+在NeuMF中，用户embedding与商品embedding可以拼接后送入MLP，以学习非线性交互关系。
+
+MLP不会天然利用图片的空间结构，也不会天然保存序列顺序。若直接把图片或序列展平输入MLP，这些结构信息需要模型间接学习，因此CNN、RNN或Transformer常更适合对应结构的数据。
+
+来源：[PyTorch神经网络组件](https://docs.pytorch.org/docs/stable/nn.html)
+
+- 提问次数：1
+- 最近提问日期：2026-10-27
+- 状态：首次记录，暂不标记为不熟悉
+
+#### CNN、RNN、MLP、Softmax和Embedding不在同一层级
+
+| 名称 | 类型 | 主要作用 |
+|---|---|---|
+| CNN | 神经网络结构 | 提取图片等规则网格中的局部特征 |
+| RNN | 神经网络结构 | 按顺序处理序列并传递历史状态 |
+| MLP | 神经网络结构 | 用全连接层学习一般非线性关系 |
+| Softmax | 数学函数／输出变换 | 把一组分数变成总和为1的分布 |
+| Embedding | 表示方法／可训练层 | 把离散ID映射为稠密向量 |
+
+一个模型可以同时使用多个组件，例如：
+
+\`\`\`text
+词ID
+ ↓
+Embedding
+ ↓
+RNN
+ ↓
+MLP
+ ↓
+Softmax
+ ↓
+类别分布
+\`\`\`
+
+CNN、RNN和MLP是可选择或组合的网络主体；Embedding通常位于输入端；Softmax通常位于多分类输出端或注意力权重计算中。
+
 ## 2. 向量与表示学习
 
 ### 2.1 Embedding（嵌入向量）
 
-> **🔁 不熟悉／需要复习**：这是同一核心概念的第 2 次提问；本次补充直观含义、查表过程、推荐系统作用和使用边界。
+> **🔁 不熟悉／需要复习**：这是同一核心概念的第 3 次提问；本次补充它与CNN、RNN、MLP和Softmax的层级区别。
 
 Embedding 的意思是：**把原本只有编号、不能直接表达关系的离散对象，转换成一组可以训练的稠密数字向量。**
+
+Embedding本身通常不是完整预测模型。它更像输入表示层：先把词ID、用户ID或商品ID变成向量，再把这些向量交给MLP、RNN、Transformer、LightGCN等模型继续处理。
 
 可以把它理解成一本“向量字典”：
 
@@ -730,8 +883,8 @@ s(u,i)=\mathbf p_u^\top\mathbf q_i
 - 输出形状是在输入形状后增加一个 `embedding_dim` 维度；
 - `nn.Embedding` 是按ID查表；SBERT则根据商品文本生成语义向量，两者来源不同，但都可以作为商品表示。
 
-- 提问次数：2
-- 最近提问日期：2026-10-19
+- 提问次数：3
+- 最近提问日期：2026-10-27
 - 状态：🔁 不熟悉／需要复习
 
 ### 2.2 `padding_idx`
@@ -1243,6 +1396,10 @@ LightGCN的核心步骤是：
 
 ### 3.2 Softmax
 
+> **🔁 不熟悉／需要复习**：这是同一核心概念的第 2 次提问；本次补充英文含义、它在模型中的角色，以及与CNN、RNN、MLP和Embedding的区别。
+
+Softmax通常直接称为 **Softmax function（Softmax函数）**，没有像CNN那样固定展开成一组英文单词。它把一组任意实数分数转换为0到1之间、总和为1的相对分布。
+
 对分数 `z`：
 
 \[
@@ -1257,6 +1414,14 @@ print(torch.softmax(scores, dim=0))
 ```
 
 与 Sigmoid 不同：Sigmoid 逐元素独立转换，不要求总和为 1。LightGCN+BPR 常使用 `sigmoid(s_pos - s_neg)`，通常不需要 Softmax；Transformer 注意力会使用 Softmax。`nn.CrossEntropyLoss` 接收原始 logits，不应预先调用 Softmax。
+
+Softmax不是神经网络主体，也通常没有可训练参数。CNN、RNN或MLP先产生一组logits，Softmax再把这些logits转换为相对权重或类别分布。最大Softmax值可以作为模型信心的一个数值信号，但不一定是校准良好的真实概率。
+
+来源：[PyTorch `Softmax` 官方文档](https://docs.pytorch.org/docs/stable/generated/torch.nn.Softmax.html)
+
+- 提问次数：2
+- 最近提问日期：2026-10-27
+- 状态：🔁 不熟悉／需要复习
 
 
 ### 3.3 BPR 与铰链损失（Pairwise Ranking Losses）
@@ -2198,3 +2363,4 @@ JSONL（JSON Lines）是“一行一个 JSON 对象”：
 | 2026-10-26 | 新增“JSON 与 CSV”，比较数据结构、类型、读取方式、适用场景，并补充 JSONL | 首次提问 |
 | 2026-10-27 | 新增“卷积神经网络（CNN）”，解释卷积核、特征图、分层特征、池化、步幅、填充及与GCN的区别 | 首次提问 |
 | 2026-10-27 | 新增“注意力机制”，解释Q/K/V、缩放点积、自注意力、多头注意力、用途和适用边界 | 首次提问 |
+| 2026-10-27 | 新增RNN与MLP；在原CNN、Softmax和Embedding条目补充英文、角色对比及复习次数 | RNN／MLP首次，CNN／Softmax第2次，Embedding第3次 |
